@@ -1,9 +1,8 @@
 <template>
   <div class="flex flex-col lg:flex-row lg:space-x-8 mt-8">
     <!-- Liste des commentaires à gauche avec un scroll -->
-    <div class="lg:w-2/3 h-96 overflow-y-auto space-y-4 pr-4 border-r border-gray-300">
+    <div class="lg:w-2/3 h-96 overflow-y-auto space-y-4 pr-4 border-r border-gray-300 mb-10 lg:mb-0">
       <!-- Skeletons pour les commentaires en cours de chargement -->
-      <!-- Affiche des placeholders pendant que les données des commentaires sont chargées -->
       <div v-if="loading" v-for="n in 3" :key="n" class="p-4 bg-gray-100 rounded-lg shadow-lg animate-pulse">
         <div class="flex justify-between items-center mb-2">
           <!-- Skeleton pour le nom et la note -->
@@ -16,21 +15,62 @@
       </div>
 
       <!-- Affichage des commentaires après chargement -->
-      <!-- Liste des commentaires stockés dans le localStorage, chaque commentaire a un nom d'utilisateur, une note et un message -->
-      <div v-else v-for="comment in comments" :key="comment.id" class="p-4 bg-gray-100 rounded-lg shadow-lg">
-        <div class="flex justify-between items-center mb-2">
-          <p class="font-bold text-gray-800">{{ comment.userName }}</p>
-          <p class="text-sm text-gray-600">Note : {{ comment.rating }}/10</p>
+      <div v-else class="space-y-4">
+        <!-- Message lorsque aucun commentaire n'est disponible -->
+        <div v-if="comments.length === 0" class="text-gray-400 italic">
+          Il n'y a pas encore de commentaires pour ce film.
         </div>
-        <p class="text-gray-700">{{ comment.message }}</p>
+
+        <!-- Affichage des commentaires si disponibles -->
+        <div v-else v-for="comment in comments" :key="comment.id" class="p-4 bg-gray-100 rounded-lg shadow-lg hover:bg-gray-200">
+          <div class="flex justify-between items-center mb-2">
+            <p class="font-bold text-gray-800">{{ comment.userName }}</p>
+
+            <!-- Cercle pour la note -->
+            <div class="relative flex items-center justify-center w-10 h-10">
+              <!-- Cercle de fond gris pour indiquer le maximum -->
+              <svg class="w-full h-full">
+                <circle
+                  class="text-gray-300"
+                  stroke-width="4"
+                  stroke="currentColor"
+                  fill="transparent"
+                  r="16"
+                  cx="20"
+                  cy="20"
+                />
+                <!-- Cercle dynamique pour représenter la note -->
+                <circle
+                  :class="{
+                    'text-red-500': comment.rating >= 1 && comment.rating <= 3,
+                    'text-orange-500': comment.rating >= 4 && comment.rating <= 6,
+                    'text-blue-500': comment.rating >= 7 && comment.rating <= 8,
+                    'text-green-500': comment.rating >= 9 && comment.rating <= 10,
+                  }"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  :stroke-dasharray="circumference"
+                  :stroke-dashoffset="circumference - (comment.rating / 10) * circumference"
+                  stroke="currentColor"
+                  fill="transparent"
+                  r="16"
+                  cx="20"
+                  cy="20"
+                />
+              </svg>
+              <!-- Affichage de la note au centre -->
+              <span class="absolute text-sm font-bold text-gray-800">{{ comment.rating }}</span>
+            </div>
+          </div>
+
+          <p class="text-gray-700">{{ comment.message }}</p>
+        </div>
       </div>
     </div>
 
     <!-- Formulaire d'ajout de commentaire à droite -->
-    <!-- Permet à l'utilisateur d'ajouter son commentaire avec son nom, un message et une note -->
     <div class="lg:w-1/3 flex flex-col gap-4 text-black">
       <!-- Nom d’utilisateur -->
-      <!-- Champ texte pour le nom d'utilisateur avec validation de longueur -->
       <input 
         v-model="userName" 
         placeholder="Nom d’utilisateur" 
@@ -42,7 +82,6 @@
       />
 
       <!-- Message -->
-      <!-- Champ de texte pour le message avec validation de longueur -->
       <textarea 
         v-model="message" 
         placeholder="Message" 
@@ -54,7 +93,6 @@
       ></textarea>
 
       <!-- Note -->
-      <!-- Champ pour la note avec une valeur numérique entre 1 et 10 -->
       <input 
         type="number" 
         v-model="rating" 
@@ -66,7 +104,6 @@
       />
 
       <!-- Bouton d'envoi -->
-      <!-- Bouton pour soumettre le commentaire -->
       <button 
         type="submit" 
         @click.prevent="submitComment"
@@ -83,6 +120,7 @@
   const route = useRoute();
   // Définir le type pour un commentaire
   interface Comment {
+    id: number;
     userName: string;
     message: string;
     rating: number;
@@ -93,7 +131,8 @@
   const rating = ref<number>(5);
   const loading = ref<boolean>(true); // Indicateur de chargement
   const comments = ref<Comment[]>([]); // Tableau de commentaires
-
+  const circumference = 2 * Math.PI * 16; // Rayon de 16 pour le cercle
+  
   // Exécuter ce code lorsque le composant est monté
   onMounted(() => {
     setTimeout(() => {
@@ -113,6 +152,7 @@
 
     // Ajouter le commentaire à la liste des commentaires
     comments.value.unshift({
+      id: Date.now(),
       userName: userName.value.trim(),
       message: message.value.trim(),
       rating: rating.value

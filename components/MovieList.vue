@@ -11,7 +11,7 @@
     />
     
     <!-- Grille d'affichage des films -->
-    <div class="grid grid-cols-3 gap-6 md:grid-cols-4 lg:grid-cols-6 mt-5">
+    <div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5 mt-5">
       <!-- Affichage des skeletons pendant le chargement -->
       <!-- Si le chargement est en cours, afficher 12 placeholders sous forme de skeletons -->
       <div v-if="loading" v-for="n in 12" :key="n" class="animate-pulse bg-gray-700 h-72 rounded-lg"></div>
